@@ -3,7 +3,7 @@
     <el-dialog v-model="isShowDialog" @open="onOpen" @close="onClose" :title="title">
       <el-form ref="lcp_wiki" :model="formData" :rules="rules" size="medium" label-width="100px">
         <el-form-item label="wiki分类" prop="classificationId">
-          <el-cascader :options="formData.topParent" :show-all-levels="false" />
+          <el-cascader v-model="formData.classificationIds"  :options="formData.topParent" :show-all-levels="true" :props="formData.props" />
         </el-form-item>
         <el-form-item label="名称" prop="name">
           <el-input v-model="formData.name" placeholder="请输入单行文本名称" clearable :style="{width: '100%'}">
@@ -11,12 +11,12 @@
         </el-form-item>
         <el-form-item label="简介" prop="introduction">
           <el-input v-model="formData.introduction" type="textarea" placeholder="请输入简介"
-            :autosize="{minRows: 4, maxRows: 4}" :style="{width: '100%'}"></el-input>
+                    :autosize="{minRows: 4, maxRows: 4}" :style="{width: '100%'}"></el-input>
         </el-form-item>
         <el-form-item label="对谁可见" prop="privacy">
           <el-radio-group v-model="formData.privacy" size="medium">
             <el-radio v-for="(item, index) in privacyOptions" :key="index" :label="item.value"
-              :disabled="item.disabled">{{item.label}}</el-radio>
+                      :disabled="item.disabled">{{item.label}}</el-radio>
           </el-radio-group>
         </el-form-item>
         <el-form-item label="允许协同" prop="allowCoordination" required>
@@ -41,13 +41,17 @@ export default {
     return {
       isShowDialog: false,
       formData: {
-        classificationId:undefined,
+        classificationIds:undefined,
         name: undefined,
         introduction: undefined,
         privacy: 1,
-        allowCoordination: false,
+        allowCoordination: true,
         topParent:[
+
         ],
+        props:{
+          checkStrictly:true
+        }
       },
       rules: {
         name: [{
@@ -59,11 +63,6 @@ export default {
           required: true,
           message: '请输入简介',
           trigger: 'blur'
-        }],
-        privacy: [{
-          required: true,
-          message: '对谁可见不能为空',
-          trigger: 'change'
         }],
       },
 
@@ -130,8 +129,9 @@ export default {
     },
     handelConfirm() {
       this.$refs['lcp_wiki'].validate(valid => {
-        if (!valid) return
-        $request({
+        if (!valid) alert($request)
+        this.formData.classificationId = this.formData.classificationIds[this.formData.classificationIds.length-1];
+        this.$request({
           url: '/lowcode/wiki/wiki',
           method: 'post',
           data: this.formData,
@@ -139,6 +139,7 @@ export default {
           this.close();
           this.$parent.initTableData();
         }).catch(res => {
+          alert("错误")
           this.$ElMessage.error("请求出错");
           console.log(res);
         });
